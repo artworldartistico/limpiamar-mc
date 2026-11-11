@@ -2,7 +2,7 @@
 
 Documentación técnica y código de la intervención realizada sobre una tienda **WordPress + WooCommerce** que ya estaba en producción: plantilla de producto, flujo de comprobantes de pago, error crítico en el checkout y una pasarela de pago QR desarrollada a medida.
 
-> **Dossier visual:** [`dossier/index.html`](dossier/index.html) · **Sitio:** <https://www.limpiamarmc.com.co/>
+> **Dossier visual:** <https://artworldartistico.github.io/andresrodriguez/dossier/wordpress-woocommerce> · **Sitio:** <https://www.limpiamarmc.com.co/>
 
 ---
 
