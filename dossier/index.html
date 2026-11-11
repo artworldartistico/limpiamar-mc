@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dossier técnico · Limpia Mar MC (WordPress + WooCommerce) — Andrés Rodríguez</title>
+<meta name="description" content="Diagnóstico y resolución de incidentes en una tienda WooCommerce en producción: plantilla de producto desde el catálogo, comprobantes de pago por correo, error fatal en checkout y pasarela QR a medida.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/dossier.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="../"><i class="brand__dot"></i>Andrés Rodríguez <span>/ Dossier técnico</span></a>
+    <div class="topbar__actions">
+      <a class="btn btn--ghost" href="#repositorio">Repositorio</a>
+      <a class="btn btn--primary" href="https://artworldartistico.github.io/andresrodriguez/index.html#contacto">Hablemos</a>
+    </div>
+  </div>
+  <div class="progress"></div>
+</header>
+
+<main class="shell">
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <span class="pill">Estabilización &amp; Arquitectura</span>
+  <h1>Estabilizar una tienda WooCommerce: <em>datos, comprobantes y checkout</em></h1>
+  <p class="hero__lede">Diagnóstico y resolución de incidentes en una tienda que ya estaba en producción: una plantilla de producto que debía leer siempre del catálogo, un flujo de comprobantes de pago por correo, un error fatal que bloqueaba el checkout y una pasarela de pago QR desarrollada a medida.</p>
+  <ul class="hero__meta">
+    <li>WordPress</li><li>WooCommerce</li><li>Astra + tema hijo</li><li>PHP</li><li>Code Snippets</li><li>WooCommerce Checkout Manager</li><li>LiteSpeed Cache</li><li>Quick Buy Now</li>
+  </ul>
+
+  <div class="flow"><pre><b>ANTES</b>    Elementor Theme Builder → plantilla Single Product → ✕ datos que no coincidían con el producto
+
+<b>DESPUÉS</b>   Astra → <b>Astra Child</b> → woocommerce/content-single-product.php → <b>$product</b> (catálogo WooCommerce)
+
+<b>CHECKOUT</b>  Cliente → comprobante (WOOCCM) → metadato del pedido → Biblioteca multimedia
+                              │
+                              ▼
+             Snippet <b>"Comprobante de pago"</b> → enlace en el correo del vendedor y del comprador   <i>✓ pedido de prueba validado</i></pre></div>
+</section>
+
+<!-- ================= ÍNDICE ================= -->
+<nav class="toc reveal" aria-label="Índice">
+  <h2>Contenido del dossier</h2>
+  <ol>
+    <li><a href="#contexto"><span>01</span>Contexto y alcance</a></li>
+    <li><a href="#incidentes"><span>02</span>Panorama de incidentes</a></li>
+    <li><a href="#arquitectura"><span>03</span>Arquitectura: tema hijo de Astra</a></li>
+    <li><a href="#producto"><span>04</span>Plantilla de producto desde WooCommerce</a></li>
+    <li><a href="#comprobantes"><span>05</span>Error crítico y comprobantes de pago</a></li>
+    <li><a href="#qr"><span>06</span>Pasarela de pago QR a medida</a></li>
+    <li><a href="#iconos"><span>07</span>Iconos de métodos de pago</a></li>
+    <li><a href="#mantenimiento"><span>08</span>Mantenimiento, rendimiento y caché</a></li>
+    <li><a href="#validacion"><span>09</span>Validación</a></li>
+    <li><a href="#limitaciones"><span>10</span>Seguridad y limitaciones conocidas</a></li>
+    <li><a href="#resultado"><span>11</span>Resultado</a></li>
+    <li><a href="#repositorio"><span>12</span>Repositorio y autoría</a></li>
+  </ol>
+</nav>
+
+<!-- ================= 01 CONTEXTO ================= -->
+<section class="section" id="contexto">
+  <div class="section__head reveal">
+    <span class="phase-tag">01 · Contexto</span>
+    <h2>Una tienda en funcionamiento que dejó de ser confiable</h2>
+    <p>Limpia Mar MC vende productos naturales en línea sobre WordPress y WooCommerce, con el tema Astra. La tienda ya estaba operativa; los problemas aparecieron al actualizar el tema y los plugins.</p>
+  </div>
+  <div class="grid-2" style="margin-top:26px">
+    <div class="card reveal">
+      <h3>Situación inicial</h3>
+      <ul>
+        <li>Productos que mostraban precio, imágenes o descripción de otro producto.</li>
+        <li>Comprobantes de pago que no llegaban al vendedor.</li>
+        <li>Mensaje de error al procesar el pedido, con cualquier método de pago.</li>
+        <li>Lentitud y elementos que no cargaban por falta de mantenimiento continuo.</li>
+      </ul>
+    </div>
+    <div class="card reveal">
+      <h3>Mi rol</h3>
+      <p><strong>Diagnóstico + arquitectura + desarrollo + pruebas.</strong> Identifiqué las causas, decidí cómo reducir la dependencia de componentes visuales, escribí el código a medida y documenté la operación.</p>
+      <ul class="stack"><li>Diagnóstico</li><li>Arquitectura</li><li>PHP / WooCommerce</li><li>Integración</li><li>Pruebas</li><li>Documentación</li></ul>
+    </div>
+  </div>
+  <div class="callout reveal" style="margin-top:20px">
+    <p><strong>Criterio de trabajo.</strong> En cada incidente separo lo comprobado de lo supuesto. Donde no hay evidencia, este dossier lo dice: una hipótesis no se presenta como causa raíz.</p>
+  </div>
+</section>
+
+<!-- ================= 02 INCIDENTES ================= -->
+<section class="section" id="incidentes">
+  <div class="section__head reveal">
+    <span class="phase-tag">02 · Panorama</span>
+    <h2>Cuatro incidentes, una arquitectura más simple</h2>
+    <p>Resumen de lo que pasó, qué se pudo comprobar y qué se hizo. El detalle de cada uno está en las secciones siguientes.</p>
+  </div>
+  <div class="card reveal">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Incidente</th><th>Impacto</th><th>Causa identificada</th><th>Solución</th></tr></thead>
+      <tbody>
+        <tr><td>1 · Datos del producto que no coincidían</td><td>Quejas y devoluciones (reportadas por el cliente)</td><td><strong>Confirmado:</strong> contenido incrustado fijo en la plantilla de Elementor. <strong>Hipótesis:</strong> caché sirviendo contenido cruzado (sin evidencia)</td><td>Plantilla en tema hijo que lee el producto actual de WooCommerce</td></tr>
+        <tr><td>2 · Comprobantes que no llegaban</td><td>El vendedor no podía verificar el pago desde el correo</td><td><strong>Confirmado:</strong> el plugin guarda IDs de adjunto, no URLs. Las funciones avanzadas pedían licencia (reportado)</td><td>Snippet que resuelve la URL con <code>wp_get_attachment_url()</code></td></tr>
+        <tr><td>3 · Error al procesar el pedido</td><td>Pedidos no completados con ningún método de pago</td><td>Error fatal de PHP (<code>strpos()</code> recibió un array) en un snippet propio, según el registro de errores. No era la pasarela</td><td>Corrección de la validación de tipos y rediseño del snippet</td></tr>
+        <tr><td>4 · Mantenimiento, rendimiento y caché</td><td>Lentitud y elementos que no cargaban (reportado)</td><td>Falta de mantenimiento continuo (reportado)</td><td>Procedimiento de actualización, purga de caché y verificación</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><p><strong>Desarrollo adicional:</strong> una pasarela de pago QR propia (plugin de un solo archivo) y un snippet para los iconos de los métodos de pago en el checkout.</p></div>
+  </div>
+</section>
+
+<!-- ================= 03 ARQUITECTURA ================= -->
+<section class="section" id="arquitectura">
+  <div class="section__head reveal">
+    <span class="phase-tag">03 · Arquitectura</span>
+    <h2>Separar las personalizaciones del tema padre</h2>
+    <p>Las personalizaciones viven en un tema hijo de Astra, en <code>wp-content/themes/astra-child/</code>, para que las actualizaciones del tema padre no las sobrescriban.</p>
+  </div>
+  <div class="card reveal">
+    <div class="flow" style="margin-top:0"><pre><b>WordPress</b> → <b>Astra</b> (tema padre) → <b>Astra Child</b> → <b>WooCommerce</b>
+                                              │
+                                              ▼
+                     woocommerce/content-single-product.php  (plantilla personalizada)
+                                              │
+                                              ▼
+                           <b>Base de datos de productos</b> (única fuente de verdad)</pre></div>
+
+    <h3>Qué hace cada archivo</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Responsabilidad</th></tr></thead>
+      <tbody>
+        <tr><td><code>functions.php</code></td><td>Encola la hoja de estilos del tema padre y la del tema hijo (esta última depende de la del padre y usa la versión del tema como parámetro de caché).</td></tr>
+        <tr><td><code>style.css</code></td><td>Encabezado del tema hijo (<code>Template: astra</code>). No contiene reglas propias: los estilos de la plantilla de producto están dentro de la propia plantilla, encapsulados con el prefijo <code>.lmc-</code>.</td></tr>
+        <tr><td><code>woocommerce/content-single-product.php</code></td><td>Sobrescribe la plantilla de contenido de producto individual de WooCommerce.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="two-col" style="margin-top:22px">
+      <div class="callout"><p><strong>Modificar el tema padre.</strong> El cambio se pierde cuando Astra se actualiza.</p></div>
+      <div class="callout"><p><strong>Sobrescribir desde el hijo.</strong> WooCommerce busca primero la plantilla en <code>tema-hijo/woocommerce/</code>; el tema padre queda intacto.</p></div>
+    </div>
+
+    <div class="callout" style="margin-top:20px"><p><strong>Alcance real del tema hijo.</strong> Protege las personalizaciones frente a la actualización de Astra, pero no elimina la necesidad de revisar la plantilla sobrescrita cuando WooCommerce cambia su plantilla de origen.</p></div>
+
+    <figure class="figure">
+      <img src="assets/images/01-estructura-astra-child.png" alt="Administrador de archivos con la carpeta astra-child y sus tres elementos" loading="lazy">
+      <figcaption>Tema hijo en el servidor: <code>functions.php</code>, <code>style.css</code> y la carpeta <code>woocommerce</code> (datos de cuenta ocultos).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= 04 PRODUCTO ================= -->
+<section class="section" id="producto">
+  <div class="section__head reveal">
+    <span class="phase-tag">04 · Incidente 1</span>
+    <h2>Una plantilla que siempre pregunta a WooCommerce</h2>
+    <p>La plantilla de producto anterior se construía con Elementor Theme Builder. Después de actualizar tema y plugins, algunos productos mostraban información que no era la suya.</p>
+  </div>
+  <div class="card reveal">
+    <details class="issue" open><summary><span class="issue__n">01</span>Datos del producto que no coincidían</summary>
+      <div class="issue__body"><dl>
+        <dt>SÍNTOMA</dt><dd>Precio, imágenes, galería y descripción que no correspondían al producto consultado. Reportado por el cliente, con quejas y devoluciones.</dd>
+        <dt>CAUSA CONFIRMADA</dt><dd>La plantilla de Elementor incluía una pestaña de descripción alimentada por una plantilla incrustada fija, no por el producto actual. Eso explica descripciones repetidas entre productos.</dd>
+        <dt>HIPÓTESIS</dt><dd>Para el cruce de precio e imágenes se sospechó de caché de página sirviendo el contenido de un producto en otra URL. <strong>No hay evidencia que lo confirme</strong> (sin cabeceras ni registros), por eso se trata como hipótesis de trabajo.</dd>
+        <dt>SOLUCIÓN</dt><dd>Sustituir la plantilla visual por una plantilla en el tema hijo que lee cada dato del objeto <code>$product</code> del producto cargado en esa URL, sin contenido fijo.</dd>
+        <dt>VERIFICACIÓN</dt><dd>Captura de la plantilla funcionando en escritorio. No se conservan capturas del estado anterior.</dd>
+      </dl></div></details>
+
+    <h3>De dónde sale cada dato</h3>
+    <div class="code"><div class="code__bar"><span class="code__label">php · content-single-product.php (extracto)</span><button class="code__copy" type="button">Copiar</button></div>
+<pre><span class="c">// Se vuelve a pedir el producto del post actual: nunca se asume</span>
+<span class="k">$product</span> = wc_get_product( get_the_ID() );
+
+<span class="k">$title</span>             = $product-&gt;get_name();
+<span class="k">$short_description</span> = $product-&gt;get_short_description();
+<span class="k">$description</span>       = $product-&gt;get_description();
+<span class="k">$average_rating</span>    = $product-&gt;get_average_rating();
+<span class="k">$review_count</span>      = $product-&gt;get_review_count();
+<span class="k">$price_html</span>        = $product-&gt;get_price_html();
+<span class="k">$main_image_id</span>     = $product-&gt;get_image_id();
+<span class="k">$gallery_image_ids</span> = $product-&gt;get_gallery_image_ids();</pre></div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Campo en pantalla</th><th>Fuente en WooCommerce</th></tr></thead>
+      <tbody>
+        <tr><td>Título</td><td><code>get_name()</code></td></tr>
+        <tr><td>Precio (normal u oferta)</td><td><code>get_price_html()</code></td></tr>
+        <tr><td>Descripción corta</td><td><code>get_short_description()</code></td></tr>
+        <tr><td>Descripción larga</td><td><code>get_description()</code>, con el filtro <code>the_content</code></td></tr>
+        <tr><td>Valoración</td><td><code>get_average_rating()</code>, <code>get_review_count()</code> y <code>wc_get_rating_html()</code></td></tr>
+        <tr><td>Imagen y galería</td><td><code>get_image_id()</code> y <code>get_gallery_image_ids()</code></td></tr>
+        <tr><td>Reseñas y formulario</td><td><code>comments_template()</code></td></tr>
+        <tr><td>Productos relacionados</td><td><code>wc_get_related_products()</code></td></tr>
+        <tr><td>Añadir al carrito</td><td><code>woocommerce_template_single_add_to_cart()</code>: el formulario real de WooCommerce</td></tr>
+        <tr><td>Comprar ahora</td><td>Plugin <em>Quick Buy Now Button for WooCommerce</em>, que se engancha a <code>woocommerce_after_add_to_cart_button</code> dentro de ese formulario</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="callout"><p><strong>Decisión de diseño.</strong> El carrito no se reimplementó: se usa el formulario nativo para que el proceso de compra, el stock, las variaciones y el botón del plugin sigan funcionando como en cualquier tienda WooCommerce. El comentario inicial de la plantilla indica además que no ejecuta los hooks de apertura y cierre del resumen de producto (ver abajo), para no duplicar galería, pestañas ni relacionados.</p></div>
+    <div class="code"><div class="code__bar"><span class="code__label">hooks que la plantilla no ejecuta</span><button class="code__copy" type="button">Copiar</button></div>
+<pre>woocommerce_before_single_product_summary
+woocommerce_after_single_product_summary</pre></div>
+
+    <h3>Interfaz</h3>
+    <ul>
+      <li>Todo el CSS y el JavaScript están dentro de la plantilla y prefijados con <code>.lmc-</code> (raíz <code>.lmc-single-product</code>), para no afectar el resto del sitio.</li>
+      <li>Diseño responsive, galería con miniaturas y flechas, pestañas Descripción / Valoraciones, productos relacionados y barra fija en móvil.</li>
+    </ul>
+
+    <figure class="figure">
+      <img src="assets/images/09-producto-plantilla-escritorio.png" alt="Página de producto con galería, precio, botones Añadir al carrito y Comprar ahora, y descripción" loading="lazy">
+      <figcaption>Plantilla personalizada en escritorio: título, valoración, precio, galería, botones de compra y descripción (teléfono de la etiqueta del producto ocultado).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= 05 COMPROBANTES ================= -->
+<section class="section" id="comprobantes">
+  <div class="section__head reveal">
+    <span class="phase-tag">05 · Incidentes 2 y 3</span>
+    <h2>Un error fatal y un flujo de comprobantes que se resolvieron juntos</h2>
+    <p>El checkout fallaba con cualquier método de pago, y los comprobantes que subían los clientes no llegaban al vendedor. La causa del error estaba en el código de mi propio snippet, no en la pasarela.</p>
+  </div>
+  <div class="card reveal">
+    <figure class="figure" style="margin-top:0">
+      <img src="assets/images/06-error-checkout.png" alt="Aviso de error del checkout: Se produjo un error al procesar tu pedido" loading="lazy">
+      <figcaption>Mensaje que veía el cliente al finalizar la compra, con cualquier método de pago.</figcaption>
+    </figure>
+
+    <h3>Diagnóstico paso a paso</h3>
+    <ol class="timeline">
+      <li><h4>Se descarta la pasarela</h4><p>El mismo error aparecía con distintos métodos de pago, así que se investigó el proceso común: creación y notificación del pedido.</p></li>
+      <li><h4>Se activa el registro de errores</h4><p><code>WP_DEBUG</code> y <code>WP_DEBUG_LOG</code> en <code>wp-config.php</code>, con la visualización pública desactivada.</p></li>
+      <li><h4>Se lee <code>wp-content/debug.log</code></h4><p>El registro mostró un error fatal al enviar la notificación del nuevo pedido, originado en el snippet <em>Comprobante de pago</em>, función <code>agregar_comprobante_wooccm</code>.</p></li>
+      <li><h4>Se identifica el tipo de dato</h4><p>El snippet recorría los metadatos del pedido y aplicaba <code>strpos()</code> a cada valor. Algunos valores llegan como array, no como texto.</p></li>
+      <li><h4>Se corrige y se vuelve a probar</h4><p>Con la validación de tipo el pedido se procesó. Faltaba aún que el enlace del comprobante apareciera en el correo.</p></li>
+      <li><h4>Se inspecciona qué guarda el plugin</h4><p>Un snippet temporal listó los metadatos del pedido en el correo de prueba. El campo del comprobante guardaba <strong>IDs de adjuntos</strong> de la biblioteca multimedia, no una URL.</p></li>
+      <li><h4>Se rediseña la extracción</h4><p>Se resuelve la URL real con <code>wp_get_attachment_url()</code> y se muestra en ambos correos.</p></li>
+    </ol>
+    <div class="code"><div class="code__bar"><span class="code__label">debug.log · línea relevante (resumida)</span><button class="code__copy" type="button">Copiar</button></div>
+<pre>PHP Fatal error:  Uncaught TypeError: strpos(): Argument #1 ($haystack)
+must be of type string, array given</pre></div>
+    <div class="callout"><p><strong>Causa del error.</strong> No fue una falla de la pasarela de pago. El fallo ocurría al notificar el pedido, por eso se manifestaba con cualquier método. El extracto completo del registro no se publica por privacidad.</p></div>
+
+    <h3>Flujo final del comprobante</h3>
+    <div class="flow"><pre>Cliente → <b>Checkout</b> (campo obligatorio "Sube tu comprobante") → <b>WooCommerce Checkout Manager</b>
+        → metadato del pedido (<b>IDs de adjuntos</b>) → Biblioteca multimedia (/wp-content/uploads/wooccm_uploads/)
+        → <b>wp_get_attachment_url()</b> → correo del vendedor (enlace + adjunto) y del comprador (enlace)</pre></div>
+
+    <div class="code"><div class="code__bar"><span class="code__label">php · snippet "Comprobante de pago" (extracto)</span><button class="code__copy" type="button">Copiar</button></div>
+<pre><span class="c">// El valor puede ser un número o una lista separada por comas</span>
+<span class="k">$ids</span> = explode( <span class="s">','</span>, (string) $value );
+foreach ( $ids as $id ) {
+    $id = trim( $id );
+    if ( is_numeric( $id ) &amp;&amp; $id &gt; 0 ) {
+        $url = wp_get_attachment_url( $id );
+        if ( $url ) { return $url; }   <span class="c">// URL real del archivo subido</span>
+    }
+}</pre></div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Pieza del snippet</th><th>Hook</th><th>Función</th></tr></thead>
+      <tbody>
+        <tr><td>Enlace en el correo</td><td><code>woocommerce_email_order_meta</code></td><td>Caja con botón "Ver / Descargar Comprobante", con título distinto para vendedor y comprador; versión en texto plano incluida.</td></tr>
+        <tr><td>Adjunto para el vendedor</td><td><code>woocommerce_email_attachments</code></td><td>Convierte la URL a ruta del servidor y adjunta el archivo al correo <code>new_order</code> si existe.</td></tr>
+        <tr><td>Extracción de la URL</td><td>función auxiliar</td><td><code>obtener_url_desde_wooccm_meta()</code>: busca el metadato del plugin y devuelve la primera URL válida.</td></tr>
+      </tbody>
+    </table></div>
+
+    <figure class="figure">
+      <img src="assets/images/08-checkout-transferencia-comprobante.png" alt="Checkout con el campo obligatorio Sube tu comprobante de pago y dos métodos de pago con su logo" loading="lazy">
+      <figcaption>Campo obligatorio para subir el comprobante, en el checkout (datos bancarios ocultados).</figcaption>
+    </figure>
+
+    <div class="gallery">
+      <figure class="figure">
+        <img src="assets/images/05-correo-vendedor-enlace.png" alt="Correo de nuevo pedido al vendedor con el enlace al comprobante" loading="lazy">
+        <figcaption>Correo del vendedor: enlace al comprobante cargado por el cliente.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/images/07-correo-comprador-enlace.png" alt="Correo al comprador con el enlace a su comprobante" loading="lazy">
+        <figcaption>Correo del comprador: confirmación con el enlace a su comprobante.</figcaption>
+      </figure>
+    </div>
+
+    <div class="callout"><p><strong>Limitación documentada.</strong> El snippet devuelve solo el primer ID válido. Si el cliente sube varios archivos, el resto no se enlaza ni se adjunta.</p></div>
+  </div>
+</section>
+
+<!-- ================= 06 QR ================= -->
+<section class="section" id="qr">
+  <div class="section__head reveal">
+    <span class="phase-tag">06 · Desarrollo a medida</span>
+    <h2>Una pasarela de pago QR en un solo archivo</h2>
+    <p>Plugin propio, <code>wc-custom-qr-gateway.php</code>, que extiende <code>WC_Payment_Gateway</code> con PHP, CSS y JavaScript en el mismo archivo y sin servicios externos.</p>
+  </div>
+  <div class="card reveal">
+    <h3>Opciones de configuración</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Opción</th><th>Qué hace en el código</th></tr></thead>
+      <tbody>
+        <tr><td>Habilitar / Deshabilitar</td><td>Activa el método de pago.</td></tr>
+        <tr><td>Título y descripción</td><td>Texto que ve el cliente en el checkout y en la página de gracias.</td></tr>
+        <tr><td>Imagen del código QR</td><td>URL de la imagen, con botón que abre la biblioteca multimedia de WordPress.</td></tr>
+        <tr><td>Logo del método de pago</td><td>Icono al lado del método en el checkout, también desde la biblioteca multimedia.</td></tr>
+        <tr><td>Métodos de envío permitidos</td><td>Multiselección de métodos de envío. Si el elegido por el cliente no está en la lista, el pago QR no aparece. Vacío = todos.</td></tr>
+        <tr><td>Costos extra por ciudad</td><td>Texto con una línea <code>Ciudad:Costo</code>. Si el pago elegido es QR y la ciudad de envío coincide, se agrega un cargo al pedido.</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="code"><div class="code__bar"><span class="code__label">php · hooks principales (extracto)</span><button class="code__copy" type="button">Copiar</button></div>
+<pre>add_action( <span class="s">'woocommerce_update_options_payment_gateways_'</span> . $this-&gt;id, ... );
+add_action( <span class="s">'woocommerce_thankyou_'</span> . $this-&gt;id, ... );
+add_action( <span class="s">'admin_enqueue_scripts'</span>, ... );               <span class="c">// media uploader del admin</span>
+add_action( <span class="s">'wp_head'</span>, ... );                              <span class="c">// CSS solo en checkout</span>
+add_filter( <span class="s">'woocommerce_available_payment_gateways'</span>, ... ); <span class="c">// filtro por envío</span>
+add_action( <span class="s">'woocommerce_cart_calculate_fees'</span>, ... );     <span class="c">// cargo por ciudad</span></pre></div>
+
+    <div class="two-col" style="margin-top:20px">
+      <div class="callout"><p><strong>Proceso de pago.</strong> <code>process_payment()</code> deja el pedido en <em>en espera</em>, reduce el stock, vacía el carrito y redirige a la página de gracias, que indica que el pedido queda pendiente hasta recibir el comprobante.</p></div>
+      <div class="callout"><p><strong>Compatibilidad.</strong> Declara compatibilidad con el almacenamiento de pedidos de alto rendimiento (HPOS) de WooCommerce.</p></div>
+    </div>
+
+    <h3>Instalación</h3>
+    <ol class="timeline">
+      <li><h4>Crear el archivo</h4><p>Guardar el código como <code>wc-custom-qr-gateway.php</code>.</p></li>
+      <li><h4>Comprimir en ZIP</h4><p>Un ZIP que contenga el archivo.</p></li>
+      <li><h4>Instalar</h4><p>Plugins → Añadir nuevo → Subir plugin.</p></li>
+      <li><h4>Activar</h4><p>Requiere WooCommerce activo; si no, el plugin muestra un aviso.</p></li>
+      <li><h4>Configurar</h4><p>WooCommerce → Ajustes → Pagos → Pago con QR.</p></li>
+      <li><h4>Probar en el checkout</h4><p>Pedido de prueba con el método QR.</p></li>
+    </ol>
+
+    <div class="gallery">
+      <figure class="figure">
+        <img src="assets/images/02-config-pasarela-qr.png" alt="Ajustes del método Pago con QR en WooCommerce con campo de imagen y botón Seleccionar Imagen" loading="lazy">
+        <figcaption>Ajustes del método de pago (QR y número de contacto ocultados).</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/images/03-checkout-pago-qr-comprobante.png" alt="Checkout con el método Pago con QR seleccionado, con logo y tarjeta del código QR" loading="lazy">
+        <figcaption>Método en el checkout, con logo y tarjeta del QR (código ocultado).</figcaption>
+      </figure>
+    </div>
+
+    <div class="callout"><p><strong>Alcance de la evidencia.</strong> La instalación, la carga del QR y del logo, y la visualización en el checkout están demostradas con capturas. Los métodos de envío permitidos y los costos por ciudad están implementados en el código, pero este dossier no incluye una prueba que demuestre su funcionamiento.</p></div>
+  </div>
+</section>
+
+<!-- ================= 07 ICONOS ================= -->
+<section class="section" id="iconos">
+  <div class="section__head reveal">
+    <span class="phase-tag">07 · Checkout</span>
+    <h2>Iconos de los métodos de pago</h2>
+    <p>Un snippet de Code Snippets, <em>Cambios en checkout</em>, mejora la lectura visual del checkout.</p>
+  </div>
+  <div class="card reveal">
+    <ul>
+      <li>Agrega una columna <strong>ID</strong> en WooCommerce → Ajustes → Pagos, necesaria para saber qué identificador usa cada pasarela.</li>
+      <li>Con el filtro <code>woocommerce_gateway_icon</code> asigna un logo por identificador (transferencia bancaria y Nequi).</li>
+      <li>La pasarela QR define su logo desde su propio campo, no desde este snippet.</li>
+    </ul>
+    <p>El resultado se ve en las capturas del checkout de las secciones 05 y 06. Las URLs de los iconos se sustituyen por marcadores en el repositorio.</p>
+  </div>
+</section>
+
+<!-- ================= 08 MANTENIMIENTO ================= -->
+<section class="section" id="mantenimiento">
+  <div class="section__head reveal">
+    <span class="phase-tag">08 · Incidente 4</span>
+    <h2>Mantenimiento, rendimiento y caché</h2>
+    <p>La falta de mantenimiento continuo se reportó como causa de lentitud y de elementos que no cargaban. Aquí se documenta el procedimiento definido, no métricas de rendimiento: no se midió antes ni después.</p>
+  </div>
+  <div class="card reveal">
+    <h3>Procedimiento de actualización</h3>
+    <ol class="timeline">
+      <li><h4>Copia de seguridad</h4><p>Antes de actualizar tema, WooCommerce o plugins.</p></li>
+      <li><h4>Actualizar y revisar compatibilidad</h4><p>Núcleo, WooCommerce, Astra y plugins. Revisar si la plantilla sobrescrita sigue vigente tras actualizar WooCommerce.</p></li>
+      <li><h4>Purgar la caché de LiteSpeed Cache</h4><p>Después de cada actualización o cambio de diseño: <em>Purge All</em> desde la barra superior de administración.</p></li>
+      <li><h4>Verificar productos</h4><p>Abrir varios productos y comprobar título, precio, galería, descripción y botones.</p></li>
+      <li><h4>Probar el flujo de compra</h4><p>Pedido de prueba con comprobante y revisión de los correos.</p></li>
+    </ol>
+    <div class="callout"><p><strong>Sobre LiteSpeed Cache.</strong> No existe una opción literal para regenerar <code>/producto/*</code> con una frecuencia propia. El control disponible es el tiempo de vida de la caché (TTL), las purgas y las exclusiones. En la pestaña <em>Cache → Exclude</em> se pueden excluir parámetros de compra como <code>add-to-cart</code> y <code>wc-quick-buy-now</code> y las páginas transaccionales (carrito, finalizar compra, mi cuenta). La integración con WooCommerce purga la página de un producto al editarlo; conviene verificarlo en cada instalación.</p></div>
+    <div class="code"><div class="code__bar"><span class="code__label">wp-config.php · depuración (solo mientras se diagnostica)</span><button class="code__copy" type="button">Copiar</button></div>
+<pre>define( <span class="s">'WP_DEBUG'</span>, true );
+define( <span class="s">'WP_DEBUG_DISPLAY'</span>, false );  <span class="c">// no mostrar errores en pantalla</span>
+define( <span class="s">'WP_DEBUG_LOG'</span>, true );      <span class="c">// escribir en wp-content/debug.log</span></pre></div>
+  </div>
+</section>
+
+<!-- ================= 09 VALIDACIÓN ================= -->
+<section class="section" id="validacion">
+  <div class="section__head reveal">
+    <span class="phase-tag">09 · Validación</span>
+    <h2>Qué está comprobado y qué falta por demostrar</h2>
+    <p>Un pedido de prueba con el método QR recorrió el flujo completo: checkout, página de confirmación y correos.</p>
+  </div>
+  <div class="card reveal">
+    <figure class="figure" style="margin-top:0">
+      <img src="assets/images/04-pedido-recibido.png" alt="Página de pedido recibido con método de pago Pago con QR e instrucciones" loading="lazy">
+      <figcaption>Pedido de prueba recibido: método Pago con QR e instrucciones para enviar el comprobante (número de pedido ocultado).</figcaption>
+    </figure>
+    <div class="two-col">
+      <div>
+        <h3>Comprobado con evidencia</h3>
+        <ul class="checklist">
+          <li>El checkout procesa un pedido con Pago con QR.</li>
+          <li>La página de confirmación muestra las instrucciones del método.</li>
+          <li>El correo del vendedor incluye el enlace al comprobante.</li>
+          <li>El correo del comprador incluye el enlace a su comprobante.</li>
+          <li>La plantilla de producto muestra título, precio, galería, descripción y botones en escritorio.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Pendiente de evidencia</h3>
+        <ul>
+          <li>Pedidos de prueba con otros métodos de pago.</li>
+          <li>Plantilla de producto en móvil y con varios productos.</li>
+          <li>Métodos de envío permitidos y costos por ciudad del plugin QR.</li>
+          <li>Comprobantes con más de un archivo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 10 LIMITACIONES ================= -->
+<section class="section" id="limitaciones">
+  <div class="section__head reveal">
+    <span class="phase-tag">10 · Seguridad y limitaciones</span>
+    <h2>Lo que conviene saber antes de replicarlo</h2>
+    <p>Limitaciones identificadas al revisar el código final. No son hipótesis: están en los archivos publicados.</p>
+  </div>
+  <div class="card reveal">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Componente</th><th>Limitación</th></tr></thead>
+      <tbody>
+        <tr><td>Snippet de comprobantes</td><td>Solo se enlaza el primer archivo. La clave se reconoce por las subcadenas <code>wooccm</code> o <code>file</code>. El adjunto se agrega solo al correo <code>new_order</code>.</td></tr>
+        <tr><td>Archivos de comprobantes</td><td>Se sirven desde <code>/wp-content/uploads/</code> por URL. No se verificó si el acceso está restringido; conviene revisarlo.</td></tr>
+        <tr><td>Plantilla de producto</td><td>No ejecuta los hooks <code>before/after_single_product_summary</code>: plugins que dependan de ellos no mostrarán su contenido. La sobrescritura no declara versión de plantilla, por lo que conviene revisarla tras actualizar WooCommerce. Los beneficios y la línea de envío son texto fijo. Un carácter <code>&gt;</code> sobrante se ve junto a "Envío". El botón fijo móvil "Comprar ahora" desplaza hasta el formulario, no compra directamente.</td></tr>
+        <tr><td>Plugin QR</td><td>La coincidencia de ciudad usa <code>strtolower()</code>, que no iguala letras acentuadas en mayúsculas. Las clases CSS del checkout no llevan prefijo. Los métodos de envío se guardan por identificador de instancia: si se recrea el método, hay que reconfigurar.</td></tr>
+        <tr><td>Snippet de iconos</td><td>Una condición con <code>|| 'paypal'</code> siempre es verdadera; no tiene efecto práctico porque ambas ramas devuelven el icono sin cambios.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><p><strong>Privacidad.</strong> Las capturas publicadas ocultan códigos QR, datos bancarios, números de contacto, nombres de compradores, números de pedido, nombres de archivos de comprobantes y datos de la cuenta del servidor. El repositorio no incluye pedidos ni comprobantes reales.</p></div>
+  </div>
+</section>
+
+<!-- ================= 11 RESULTADO ================= -->
+<section class="section" id="resultado">
+  <div class="section__head reveal">
+    <span class="phase-tag">11 · Resultado</span>
+    <h2>Resultado e impacto</h2>
+    <p>Una tienda con el checkout operativo, los comprobantes en el correo y una plantilla de producto que depende del catálogo.</p>
+  </div>
+  <ul class="metrics reveal">
+    <li><b>4</b><span>Incidentes documentados</span></li>
+    <li><b>4</b><span>Piezas a medida: tema hijo, plugin QR y 2 snippets</span></li>
+    <li><b>2</b><span>Correos con enlace al comprobante</span></li>
+    <li><b>1</b><span>Pedido de prueba validado de extremo a extremo</span></li>
+  </ul>
+  <div class="card reveal">
+    <ul class="checklist">
+      <li>La plantilla de producto lee cada dato del producto actual en WooCommerce, sin contenido fijo.</li>
+      <li>El checkout dejó de bloquearse: la causa estaba en un snippet y se corrigió.</li>
+      <li>El vendedor y el comprador reciben el enlace al comprobante, sin pagar la versión de pago del plugin de campos.</li>
+      <li>Existe una pasarela QR propia, instalable como un solo archivo.</li>
+    </ul>
+    <div class="callout">
+      <p><strong>Lección:</strong> los datos comerciales deben salir de una única fuente, y el código que interviene en pedidos debe validar los tipos antes de operar. Un fragmento que falla al notificar un pedido puede detener toda la venta.</p>
+    </div>
+    <h3>Stack</h3>
+    <ul class="stack"><li>WordPress</li><li>WooCommerce</li><li>Astra / Astra Child</li><li>PHP</li><li>HTML · CSS · JavaScript</li><li>Code Snippets</li><li>WooCommerce Checkout Manager</li><li>Quick Buy Now Button</li><li>LiteSpeed Cache</li></ul>
+  </div>
+</section>
+
+<!-- ================= 12 REPOSITORIO ================= -->
+<section class="section" id="repositorio">
+  <div class="section__head reveal">
+    <span class="phase-tag">12 · Repositorio y autoría</span>
+    <h2>Evidencia técnica y delimitación del trabajo</h2>
+    <p>Código, documentación y evidencias anonimizadas, organizados para reproducir la solución.</p>
+  </div>
+  <div class="card reveal">
+    <div class="two-col">
+      <div>
+        <h3>Desarrollo propio</h3>
+        <ul>
+          <li>Tema hijo de Astra y plantilla de producto.</li>
+          <li>Plugin <code>wc-custom-qr-gateway.php</code>.</li>
+          <li>Snippets "Comprobante de pago" y "Cambios en checkout".</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Componentes de terceros</h3>
+        <ul>
+          <li>WordPress, WooCommerce y el tema Astra.</li>
+          <li>WooCommerce Checkout Manager, Code Snippets, LiteSpeed Cache y Quick Buy Now Button for WooCommerce.</li>
+          <li>Elementor (utilizado anteriormente).</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:18px">Repositorio técnico: <a href="https://github.com/artworldartistico" target="_blank" rel="noopener">github.com/artworldartistico</a>.</p>
+    <div class="callout"><p><strong>Nota de autoría.</strong> WordPress, WooCommerce, Astra y los plugins mencionados son proyectos de terceros. La intervención documentada corresponde al diagnóstico, la arquitectura del tema hijo, la plantilla, el plugin de pago QR, los snippets, las pruebas y la documentación.</p></div>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section class="cta reveal">
+  <h2>¿Tu tienda muestra datos que no coinciden o falla en el checkout?</h2>
+  <p>Identifico la causa antes de tocar el diseño y entrego la solución documentada.</p>
+  <div class="cta__row">
+    <a class="btn btn--primary" href="https://artworldartistico.github.io/andresrodriguez/index.html#contacto">Agendar diagnóstico</a>
+    <a class="btn" href="https://www.limpiamarmc.com.co/" target="_blank" rel="noopener">Ver la tienda</a>
+    <a class="btn" href="https://artworldartistico.github.io/andresrodriguez/index.html">Volver al sitio principal</a>
+  </div>
+</section>
+
+<footer class="foot">
+  <span>Andrés Felipe Rodríguez Barbosa · Dirección + Estrategia + Arquitectura + IA</span>
+  <span>Dossier técnico · Limpia Mar MC · Actualizado: noviembre 2026</span>
+</footer>
+
+</main>
+<script src="assets/js/dossier.js"></script>
+</body>
+</html>
